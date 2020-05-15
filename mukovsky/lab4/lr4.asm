@@ -22,9 +22,26 @@ INTERRUPT proc far
 		SAVE_IP     dw 0
 		SAVE_CS     dw 0
 		SAVE_PSP  	dw 0
+		SAVE_SP		dw 0
+		SAVE_SS		dw 0
+		SAVE_BX		dw 0
+		INT_STACK dw 100 dup(0)
+		
+		
 	INTERRUPT_START:
+		
+		mov SAVE_SP, sp
+		mov SAVE_SS, ss
+		mov SAVE_BX, bx
+		mov bx, seg INT_STACK
+		mov ss,	bx
+		mov bx, offset INT_STACK
+		add bx, 200
+		mov sp, bx
+		
+	
 		push ax
-		push bx
+		push bp
 		push cx
 		push dx
 		push si
@@ -36,9 +53,12 @@ INTERRUPT proc far
 		
 		call GET_CURS ;dh, dl - текущая строка, колонка курсора
 					 ;ch,cl - текущая начальная, конечная строка курсора
+					 
+					 
+		
 		push dx
 		call SET_CURS
-		
+
 		
 		mov ax, seg COUNTER_INT
 		push ds
@@ -66,7 +86,9 @@ INTERRUPT proc far
 			mov ax, seg COUNTER_INT
 			mov es,ax
 			mov bp, offset COUNTER_INT
+			
 			call OUTPUT_BP
+			
 			pop bp
 			pop es
 
@@ -80,8 +102,14 @@ INTERRUPT proc far
 			pop si
 			pop dx
 			pop cx
-			pop bx
+			pop bp
 			pop ax
+			
+			
+			mov sp, SAVE_SP
+			mov bx,	SAVE_SS
+			mov ss,	bx
+			mov bx,	SAVE_BX
 			
 			mov al, 20h
 			out 20h, al
