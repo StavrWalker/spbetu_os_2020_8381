@@ -201,7 +201,7 @@ INT_CHECK       PROC
 		push    si
 
 		mov     ah, 35h
-		mov     al, 1Ch
+		mov     al, 09h
 		int     21h
 
 		mov     si, offset INT_CODE
