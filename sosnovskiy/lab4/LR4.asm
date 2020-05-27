@@ -11,7 +11,7 @@ DATA    ENds
 
 CODE    SEGMENT
 	ASSUME  CS:CODE, ds:DATA, SS:ASTACK
-	
+
 print proc near
 	push ax
 	mov ah, 09h
@@ -19,11 +19,11 @@ print proc near
 	pop ax
 	ret
 print endp
-	
+
 ;вывод строки по адресу es:bp
 outputBP proc
 	push ax
-	push bx 
+	push bx
 	push dx
 	push cx
 	mov ah, 13h
@@ -40,7 +40,7 @@ outputBP proc
 	pop ax
 	ret
 outputBP endp
-	
+
 word_to_str proc near
 	;на входе ax число 16 бит
 	;si указатель на строку
@@ -98,28 +98,42 @@ word_to_str proc near
 	pop ax
     ret
 word_to_str endp
-	
+
 ROUT    PROC    FAR
     jmp ROUT_BEGIN
-    
-	; rout data
+
+	ROUT_DATA:
 	interrupts_str    DB  "Interrupts:    $"
 	signature DW  1234h
 	counter dw 0
 	temporary db 16 dup(0)
+	KEEP_SP		DW 	0
+	KEEP_SS		DW 	0
+	KEEP_BX		DW 	0
 	KEEP_IP 	DW  0
 	KEEP_CS 	DW  0
 	KEEP_PSP 	DW	0
-    
+
+	ROUT_STACK DW 100 dup(?)
+	
     ROUT_BEGIN:
+		mov KEEP_SP, SP
+		mov KEEP_SS, SS
+		mov	KEEP_BX, BX
+		mov BX, seg ROUT_STACK
+		mov SS, BX
+		mov BX, offset ROUT_STACK
+		add BX, 200
+		mov SP, BX
+
 		push	ax
-		push    bx
+		push    bp
 		push    cx
 		push    dx
 		push    si
         push    es
         push    ds
-    STACK_SETUP:
+
 		mov ax, seg interrupts_str
 		mov ds, ax
 		mov es, ax
@@ -134,14 +148,19 @@ ROUT    PROC    FAR
 		lea bp, interrupts_str
 		call outputBP
 
-	
+	ROUT_ENDING:
 		pop     ds
 		pop     es
 		pop		si
 		pop     dx
 		pop     cx
-		pop     bx
+		pop     bp
 		pop		ax
+		
+		mov SP, KEEP_SP
+		mov BX, KEEP_SS
+		mov SS, BX
+		mov BX, KEEP_BX
 
 		mov     AL, 20h
 		out     20h, AL
@@ -153,7 +172,7 @@ ROUT_CHECK       PROC
 	push    ax
 	push    bx
 	push    si
-	
+
 	mov     AH, 35h
 	mov     AL, 1Ch
 	int     21h
@@ -163,7 +182,7 @@ ROUT_CHECK       PROC
 	cmp	    ax, signature
 	jne     ROUT_CHECK_END
 	mov     bool_isLoaded, 1
-	
+
 	ROUT_CHECK_END:
 		pop     si
 		pop     bx
@@ -185,7 +204,7 @@ ROUT_LOAD        PROC
 		mov     KEEP_CS, es
         mov     KEEP_IP, bx
         mov     ax, seg ROUT
-		mov     dx, offset ROUT	
+		mov     dx, offset ROUT
 		mov     ds, ax
 		mov     AH, 25h
 		mov     AL, 1Ch
@@ -217,7 +236,7 @@ ROUT_UNLOAD      PROC
 		push    ds
 		push    es
 		push    si
-		
+
 		mov     AH, 35h
 		mov     AL, 1Ch
 		int     21h
@@ -225,14 +244,14 @@ ROUT_UNLOAD      PROC
 		sub 	si, offset ROUT
 		mov 	dx, es:[bx + si]
 		mov 	ax, es:[bx + si + 2]
-		
+
 		push 	ds
 		mov     ds, ax
 		mov     AH, 25h
 		mov     AL, 1Ch
 		int     21h
 		pop 	ds
-		
+
 		mov 	ax, es:[bx + si + 4]
 		mov 	es, ax
 		push 	es
@@ -243,16 +262,16 @@ ROUT_UNLOAD      PROC
 		pop 	es
 		mov 	AH, 49h
 		int 	21h
-		
+
 		STI
-		
+
 		pop     si
 		pop     es
 		pop     ds
 		pop     dx
 		pop     bx
 		pop     ax
-		
+
 	ret
 ROUT_UNLOAD      ENDP
 
@@ -269,7 +288,7 @@ COMMAND_LINE_PARAM_CHECK        PROC
 		cmp     byte ptr es:[84h], 'n'
 		jne     COMMAND_LINE_PARAM_CHECK_END
 		mov     UN_CL, 1
-		
+
 	COMMAND_LINE_PARAM_CHECK_END:
 		pop     es
 		pop     ax
@@ -283,7 +302,7 @@ MAIN PROC
 		mov     ax, DATA
 		mov     ds, ax
 		mov     KEEP_PSP, es
-		
+
 		call    ROUT_CHECK
 		call    COMMAND_LINE_PARAM_CHECK
 		cmp     UN_CL, 1
