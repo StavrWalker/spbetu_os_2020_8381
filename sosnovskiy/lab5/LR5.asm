@@ -36,14 +36,16 @@ ROUT    PROC    FAR
 		mov 	SS, AX 
 		mov 	SP, 0 
 		mov 	AX, KEEP_AX
+		
 		push	AX
 		push    BX
 		push    CX
 		push    DX
 		push    SI
+		push 	DI
         push    ES
         push    DS
-		push 	AX
+		
 		mov 	AX, SEG temporary
 		mov 	DS, AX
 		in 		AL, 60h
@@ -104,18 +106,20 @@ ROUT    PROC    FAR
 		int 16h
 		or AL, AL
 		jz ROUT_ENDING
-		mov AX, 0040h
+		mov AX, 0000h
 		mov ES, AX
-		mov AX, ES:[1Ah]
-		mov ES:[1Ch], AX
+		mov AX, ES:[41Ah]
+		mov ES:[41Ch], AL
 		jmp PRINTING_SYMBOL
 	ROUT_ENDING:
 		pop     DS
 		pop     ES
+		pop		DI
 		pop		SI
 		pop     DX
 		pop     CX
 		pop     BX
+		pop		AX
 		mov 	AX, KEEP_SS
 		mov 	SS, AX
 		mov		AX, KEEP_AX
