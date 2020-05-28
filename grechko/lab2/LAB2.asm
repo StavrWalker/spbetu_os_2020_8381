@@ -1,158 +1,184 @@
-TESTPSP		SEGMENT
-			ASSUME	CS:TESTPSP,	DS:TESTPSP,	ES:NOTHING,	SS:NOTHING
-			ORG		100H
-START:		JMP		BEGIN
-; ß°’’Ú©
-ADDRESS_MEM		db		'Unavailable memory address :     ', 0dh, 0ah, '$'
-ADDRESS_ENV		db		'Environment address :         	  ', 0dh, 0ah, '$'
-TAIL_COMLIN		db		'Command line tail :              ', 0dh, 0ah, '$'
-CONTENT_ENV		db		'Environment content :            ', 0dh, 0ah, '$'
-MODULE_PATH	    db		'Module load path : 		      ', 0dh, 0ah, '$'
-NEXT_LINE		db		0dh, 0ah, '$'
-; ›‚◊•©ßË‚Ú
+TESTPC	SEGMENT
+		ASSUME	CS:TESTPC,	DS:TESTPC,	ES:NOTHING,	SS:NOTHING
+		ORG		100H
+START:	JMP		BEGIN
+; –î–ê–ù–ù–´–ï
+UnavailableMemory	db		'Unavailable memory segment address:     ',0dh,0ah,'$'
+EnvironmentAdress	db 		'Segment address of environment:     ',0dh,0ah,'$'
+Tail				db		'Command line tail: ', '$'
+EnvironmentContents	db		'Environment area contents: ' , '$'
+Path				db		'Module load path: ' , '$'
+Endl				db		0dh,0ah,'$'
+; –ü–†–û–¶–ï–î–£–†–´
 ;-----------------------------------------------------------
-WRITE_STRING	PROC	near
-			mov		AH, 09h
-			int		21h
-			ret
-WRITE_STRING	ENDP
-;---------------------------
+Print_message	PROC	near
+		push 	ax
+		mov		ah,09h
+		int		21h
+		pop		ax
+		ret
+Print_message	ENDP
+;-----------------------------------------------------------
 TETR_TO_HEX		PROC	near
-			and		AL, 0fh
-			cmp		AL, 09
-			jbe		NEXT
-			add		AL, 07
-NEXT:		add		AL, 30h
-			ret
+		and		al,0fh
+		cmp		al,09
+		jbe		NEXT
+		add		al,07
+NEXT:	add		al,30h
+		ret
 TETR_TO_HEX		ENDP
-;---------------------------
-BYTE_TO_HEX		PROC 	near
-; ¢†ΩÂ Î AL ÿ®·®Î÷¶∑Â„ﬁ Î ¶Î† „∑“Î÷–† ı®„Â‘. ˚∑„–† Î AX
-			push	CX
-			mov		AH, AL
-			call	TETR_TO_HEX
-			xchg	AL, AH
-			mov		CL, 4
-			shr		AL, CL
-			call	TETR_TO_HEX ; Î AL „Â†·ı†ﬁ §∑™·†
-			pop		CX 			; Î AH “–†¶ı†ﬁ
-			ret
+;-----------------------------------------------------------
+BYTE_TO_HEX		PROC near
+; –±–∞–π—Ç –≤ AL –ø–µ—Ä–µ–≤–æ–¥–∏—Ç—Å—è –≤ –¥–≤–∞ —Å–∏–º–≤–æ–ª–∞ —à–µ—Å—Ç–Ω. —á–∏—Å–ª–∞ –≤ AX
+		push	cx
+		mov		ah,al
+		call	TETR_TO_HEX
+		xchg	al,ah
+		mov		cl,4
+		shr		al,cl
+		call	TETR_TO_HEX ; –≤ AL —Å—Ç–∞—Ä—à–∞—è —Ü–∏—Ñ—Ä–∞
+		pop		cx 			; –≤ AH –º–ª–∞–¥—à–∞—è
+		ret
 BYTE_TO_HEX		ENDP
-;--------------------------
+;-----------------------------------------------------------
 WRD_TO_HEX		PROC	near
-; ÿ®·Î÷¶ Î 16 „/„ 16-Â∑ ·†Û·ﬁ¶‘÷¨÷ ˚∑„–†
-; Î AX - ˚∑„–÷, DI - †¶·®„ ÿ÷„–®¶‘®¨÷ „∑“Î÷–†
-			push	BX
-			mov		BH, AH
-			call	BYTE_TO_HEX
-			mov		[DI], AH
-			dec		DI
-			mov		[DI], AL
-			dec		DI
-			mov		AL, BH
-			call	BYTE_TO_HEX
-			mov		[DI], AH
-			dec		DI
-			mov		[DI], AL
-			pop		BX
-			ret
+; –ø–µ—Ä–≤–æ–¥ –≤ 16 —Å/—Å 16-—Ç–∏ —Ä–∞–∑—Ä—è–¥–Ω–æ–≥–æ —á–∏—Å–ª–∞
+; –≤ AX - —á–∏—Å–ª–æ, DI - –∞–¥—Ä–µ—Å –ø–æ—Å–ª–µ–¥–Ω–µ–≥–æ —Å–∏–º–≤–æ–ª–∞
+		push	bx
+		mov		bh,ah
+		call	BYTE_TO_HEX
+		mov		[di],ah
+		dec		di
+		mov		[di],al
+		dec		di
+		mov		al,bh
+		call	BYTE_TO_HEX
+		mov		[di],ah
+		dec		di
+		mov		[di],al
+		pop		bx
+		ret
 WRD_TO_HEX		ENDP
-;---------------------------
-DEF_ADDRESS_MEM	PROC	near
-; ◊ÿ·®¶®–®‘∑® „®¨“®‘Â‘÷¨÷ †¶·®„† ‘®¶÷„ÂÁÿ‘÷Ω ÿ†“ﬁÂ∑
-			push	AX
-			mov 	AX, ES:[2]
-			lea		DI, ADDRESS_MEM
-			add		DI, 33
-			call 	WRD_TO_HEX
-			pop		AX
-			lea		DX, ADDRESS_MEM
-			call	WRITE_STRING
-			ret
-DEF_ADDRESS_MEM	ENDP
-;---------------------------
-DEF_ADDRESS_ENV	PROC	near
-; ◊ÿ·®¶®–®‘∑® „®¨“®‘Â‘÷¨÷ †¶·®„† „·®¶Ò
-			push 	AX
-			mov		AX, ES:[2Ch]
-			lea		DI, ADDRESS_ENV
-			add 	DI, 33
-			call	WRD_TO_HEX
-			pop		AX
-			lea		DX, ADDRESS_ENV
-			call	WRITE_STRING
-			ret
-DEF_ADDRESS_ENV	ENDP
-;---------------------------
-DEF_TAIL_COMLIN	PROC	near
-; ◊ÿ·®¶®–®‘∑® µÎ÷„Â† ∆÷“†‘¶‘÷Ω „Â·÷∆∑
-			lea		DX, TAIL_COMLIN
-			call	WRITE_STRING
-			push	AX
-			push	BX
-			xor		AX, AX
-			mov		AL,	ES:[80h]
-			add		AL, 81h
-			mov		SI,	AX
-			push	ES:[SI]
-			mov		byte ptr ES:[SI+1], '$'
-			push	DS
-			mov		BX, ES
-			mov 	DS,	BX
-			mov		DX,	81h
-			call	WRITE_STRING
-			pop		DS
-			pop		ES:[SI]
-			pop		CX
-			pop		AX
-			ret
-DEF_TAIL_COMLIN	ENDP
-;---------------------------
-DEF_CONENV_PATH	PROC	near
-; ◊ÿ·®¶®–®‘∑® „÷¶®·È∑“÷¨÷ ÷¢–†„Â∑ „·®¶Ò
-; ◊ÿ·®¶®–®‘∑® ÿÁÂ∑ Û†¨·ÁÛ÷˚‘÷¨÷ ™†Ω–†
-			lea		DX, CONTENT_ENV
-			call	WRITE_STRING
-			mov 	SI, 2Ch
-			mov 	DS, ES:[2Ch]
-			xor 	SI, SI
-LOOP_1: 	cmp 	word ptr [si], 0
-			je 		LOOP_END
-			lodsb
-			cmp		AL, 0h
-			jnz 	NEXT_LOOP
-			mov 	AX, 0Dh
-			int 	29h
-			mov 	AX, 0Ah
-NEXT_LOOP:	int 	29h
-			jmp 	LOOP_1
-LOOP_END:	inc 	SI
-			inc 	SI
-			lodsb
-			inc 	SI
-			push	DS
-			mov 	CX, ES
-			mov 	DS, CX
-			lea		DX, NEXT_LINE
-			call 	WRITE_STRING
-			lea		DX, MODULE_PATH
-			call 	WRITE_STRING
-			pop 	DS
-LOOP_2:		lodsb 
-			cmp 	AL, 0h
-			jz 		RETURN
-			int 	29h
-			jmp 	LOOP_2
-RETURN:		ret
-DEF_CONENV_PATH	ENDP
-;---------------------------
-; ÿ®˚†ÂÌ ·®ÛÁ–ÌÂ†Â÷Î ∑ ÎÒµ÷¶ Î DOS
-BEGIN:		call	DEF_ADDRESS_MEM
-			call	DEF_ADDRESS_ENV
-			call	DEF_TAIL_COMLIN
-			call	DEF_CONENV_PATH
-			mov		AH, 4Ch
-			int		21h
-			ret
-TESTPSP			ENDS
-END 	START
+;-----------------------------------------------------------
+UnMemory		PROC	near
+		push	ax
+		mov 	ax,es:[2]
+		lea		di,UnavailableMemory
+		add 	di,39
+		call	WRD_TO_HEX
+		pop		ax
+		ret
+UnMemory		ENDP
+;-----------------------------------------------------------
+EnAdress		PROC	near
+		push	ax
+		mov 	ax,es:[2Ch]
+		lea		di,EnvironmentAdress
+		add 	di,35
+		call	WRD_TO_HEX
+		pop		ax
+		ret
+EnAdress		ENDP
+;-----------------------------------------------------------
+ClTail			PROC	near
+		push 	cx
+		xor 	cx, cx
+		mov 	cl, es:[80h]
+		cmp		cl, 0
+		je		EXIT
+		add		cl, 81h
+		mov		si, cx
+		push 	es:[si]
+		mov 	byte ptr es:[si], '$'
+		push	ds
+		mov 	cx, es
+		mov     ds, cx
+		mov		dx, 81h
+		call	Print_message
+		pop		ds
+		pop		es:[si]
+EXIT:	pop		cx
+		ret
+ClTail			ENDP
+;-----------------------------------------------------------
+Area_and_path	PROC	near
+		push 	es 
+		push	ax 
+		push	cx 
+		lea 	dx,EnvironmentContents
+		call	Print_message
+		mov		es,es:[2ch] 
+		mov		si,0 
+	NEW_STR:
+		lea		dx, Endl
+		call	Print_message 
+		mov		ax,si 
+	END_STR:
+		cmp 	byte ptr es:[si], 0 
+		je 		PRINT_STR 
+		inc		si
+		jmp 	END_STR 
+	PRINT_STR:
+		push	es:[si] 
+		mov		byte ptr es:[si], '$' 
+		push	ds 
+		mov		cx,es 
+		mov		ds,cx 
+		mov		dx,ax 
+		call	Print_message 
+		pop		ds 
+		pop		es:[si] 
+		inc		si 
+		cmp 	byte ptr es:[si], 01h 
+    	jne 	NEW_STR 
+    	lea		dx, Endl
+		call	Print_message 
+    	lea		dx,Path 
+    	call	Print_message 
+    	add 	si,2 
+		lea		dx, Endl
+		call	Print_message 
+		mov		ax,si 
+	END_STR2:
+		cmp 	byte ptr es:[si], 0 
+		je 		PRINT_STR2 
+		inc		si 
+		jmp 	END_STR2 
+	PRINT_STR2:
+		push	es:[si] 
+		mov		byte ptr es:[si], '$' 
+		push	ds 
+		mov		cx,es 
+		mov		ds,cx 
+		mov		dx,ax 
+		call	Print_message 
+		pop		ds 
+		pop		es:[si] 
+    	lea		dx, Endl
+		call	Print_message 
+		pop		cx 
+		pop		ax 
+		pop		es 
+		ret
+Area_and_path	ENDP
+;-----------------------------------------------------------
+BEGIN:
+		call	UnMemory
+		lea		dx,UnavailableMemory
+		call	Print_message
+		call 	EnAdress
+		lea 	dx,EnvironmentAdress
+		call	Print_message
+		lea 	dx,Tail
+		call	Print_message
+		call	ClTail
+		lea		dx, Endl
+		call	Print_message
+		call	Area_and_path 
+		xor 	al,al
+		mov		ah,4ch
+		int		21h
+TESTPC	ENDS
+		END 	START	;–∫–æ–Ω–µ—Ü –º–æ–¥—É–ª—è, START - —Ç–æ—á–∫–∞ –≤—Ö–æ–¥–∞
+
+
