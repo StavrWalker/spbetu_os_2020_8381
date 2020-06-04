@@ -2,7 +2,7 @@ SPECS SEGMENT
       ASSUME CS:SPECS, DS:SPECS, ES:NOTHING, SS:NOTHING
       ORG 100H
 
-
+START: JMP BEGIN
 ;DATA SEGMENT
     T_PC db 'PC', 0dh, 0ah, '$'
     T_PC_XT db 'PC/XT', 0dh, 0ah, '$'
