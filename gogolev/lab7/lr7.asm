@@ -21,8 +21,8 @@ DATA SEGMENT
     CHILD_BEGINS_STR   db 13, 10, "<----- Child begins ----->", 13, 10, "$"
     CHILD_END_STR      db 13, 10, "<----- Child ends ----->", 13, 10, "$"
     PATH 		       db 	256 dup(0)
-	OVER_FIRST         db "over1.exe", 0, "$"
-    OVER_SECOND         db "over2.exe", 0, "$"
+	OVER_FIRST         db "over1.ovl", 0, "$"
+    OVER_SECOND         db "over2.ovl", 0, "$"
     KEEP_PSP 		   dw 	0
     KEEP_SS 		   dw 	0
     KEEP_SP 		   dw 	0
